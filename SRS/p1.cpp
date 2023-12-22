@@ -1,39 +1,52 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-#define ROWS 10
-#define COLS 10
+#define SIZE 10
 
-void printGraph(int graph[ROWS][COLS]) {
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
+// Функция для вывода графа на экран
+void printGraph(int graph[SIZE][SIZE]) {
+    printf("Граф:\n");
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
             printf("%d ", graph[i][j]);
         }
         printf("\n");
     }
 }
 
-void leeAlgorithm(int graph[ROWS][COLS], int startX, int startY, int endX, int endY) {
-    int queue[ROWS * COLS][2];
+// Функция для поиска кратчайшего пути между двумя вершинами с помощью алгоритма Ли
+void leeAlgorithm(int graph[SIZE][SIZE], int startX, int startY, int targetX, int targetY) {
+    int queue[SIZE * SIZE][2];
     int front = 0, rear = 0;
-    int dx[] = {1, -1, 0, 0};
-    int dy[] = {0, 0, 1, -1};
+    int dx[4] = {-1, 1, 0, 0};
+    int dy[4] = {0, 0, -1, 1};
 
+    // Инициализация массива расстояний
+    int distance[SIZE][SIZE];
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            distance[i][j] = -1;
+        }
+    }
+
+    // Начальная вершина
+    distance[startX][startY] = 0;
     queue[rear][0] = startX;
     queue[rear][1] = startY;
     rear++;
 
+    // Алгоритм Ли
     while (front != rear) {
-        int x = queue[front][0];
-        int y = queue[front][1];
+        int currentX = queue[front][0];
+        int currentY = queue[front][1];
         front++;
 
-        for (int k = 0; k < 4; k++) {
-            int newX = x + dx[k];
-            int newY = y + dy[k];
-
-            if (newX >= 0 && newX < ROWS && newY >= 0 && newY < COLS && graph[newX][newY] == 0) {
-                graph[newX][newY] = graph[x][y] + 1;
+        for (int i = 0; i < 4; i++) {
+            int newX = currentX + dx[i];
+            int newY = currentY + dy[i];
+            if (newX >= 0 && newX < SIZE && newY >= 0 && newY < SIZE && graph[newX][newY] == 1 && distance[newX][newY] == -1) {
+                distance[newX][newY] = distance[currentX][currentY] + 1;
                 queue[rear][0] = newX;
                 queue[rear][1] = newY;
                 rear++;
@@ -41,39 +54,30 @@ void leeAlgorithm(int graph[ROWS][COLS], int startX, int startY, int endX, int e
         }
     }
 
-    if (graph[endX][endY] == 0) {
-        printf("Кратчайший путь не найден\n");
-    } else {
-        printf("Кратчайший путь: %d\n", graph[endX][endY]);
-    }
+    // Вывод кратчайшего пути
+    printf("Кратчайший путь от (%d,%d) до (%d,%d) равен %d\n", startX, startY, targetX, targetY, distance[targetX][targetY]);
 }
 
 int main() {
-    int graph[ROWS][COLS] = {
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 0, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 0, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 0, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 0, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 0, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-        {1, 1, 1, 1, 1, 1, 1, 1, 0, 0}
-    };
+    // Инициализация графа случайными значениями
+    int graph[SIZE][SIZE];
+    srand(time(NULL));
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            graph[i][j] = rand() % 2; // заполняем случайными значениями 0 или 1
+        }
+    }
 
-    printf("Сгенерированный граф:\n");
+    // Вывод графа на экран
     printGraph(graph);
 
-    int startX, startY;
-    int endX, endY;
-
+    // Поиск кратчайшего пути между двумя вершинами
+    int startX, startY, targetX, targetY;
     printf("Введите координаты начальной вершины (x y): ");
     scanf("%d %d", &startX, &startY);
     printf("Введите координаты конечной вершины (x y): ");
-    scanf("%d %d", &endX ,&endY);
-
-    leeAlgorithm(graph,startX,startY,endX,endY);
+    scanf("%d %d", &targetX, &targetY);
+    leeAlgorithm(graph, startX, startY, targetX, targetY);
 
     return EXIT_SUCCESS;
 }
