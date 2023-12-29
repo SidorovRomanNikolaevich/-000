@@ -17,7 +17,7 @@ int main() {
         system("clear"); // очистить экран консоли
 
         // Получить информацию о текущем использовании ресурсов
-        FILE *result = popen("ps aux | grep <название_вашей_программы>", "r");
+        FILE *result = popen("ps aux | grep p1.c", "r");
         char buffer[1024];
         while (fgets(buffer, 1024, result) != NULL) {
             printf("%s", buffer); // вывести результаты на экран
