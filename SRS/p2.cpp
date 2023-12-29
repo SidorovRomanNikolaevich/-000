@@ -25,7 +25,7 @@ int main() {
         pclose(result);
 
         // Записать результаты в файл
-        result = popen("ps aux | grep <название_вашей_программы>", "r");
+        result = popen("ps aux | grep p1.c, "r");
         while (fgets(buffer, 1024, result) != NULL) {
             fprintf(logfile, "%s", buffer); // записать результаты в файл
         }
