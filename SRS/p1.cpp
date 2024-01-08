@@ -1,83 +1,98 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <limits.h>
 #include <time.h>
 
-#define SIZE 10
+#define ROWS 4
+#define COLS 4
 
-// Функция для вывода графа на экран
-void printGraph(int graph[SIZE][SIZE]) {
-    printf("Граф:\n");
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            printf("%d ", graph[i][j]);
-        }
-        printf("\n");
-    }
+// Структура для представления точки в лабиринте
+typedef struct {
+    int x, y;
+} Point;
+
+// Функция для проверки, является ли точка допустимой в лабиринте
+bool isValid(int maze[ROWS][COLS], bool visited[ROWS][COLS], int x, int y) {
+    return (x >= 0 && x < ROWS && y >= 0 && y < COLS && maze[x][y] == 0 && !visited[x][y]);
 }
 
-// Функция для поиска кратчайшего пути между двумя вершинами с помощью алгоритма Ли
-void leeAlgorithm(int graph[SIZE][SIZE], int startX, int startY, int targetX, int targetY) {
-    int queue[SIZE * SIZE][2];
+// Реализация алгоритма Ли для поиска кратчайшего пути в лабиринте
+int leeAlgorithm(int maze[ROWS][COLS], Point start, Point end) {
+    int dx[] = {1, -1, 0, 0};
+    int dy[] = {0, 0, 1, -1};
+    
+    bool visited[ROWS][COLS];
+    memset(visited, false, sizeof(visited));
+    
+    visited[start.x][start.y] = true;
+    
+    int queueX[ROWS * COLS];
+    int queueY[ROWS * COLS];
     int front = 0, rear = 0;
-    int dx[4] = {-1, 1, 0, 0};
-    int dy[4] = {0, 0, -1, 1};
-
-    // Инициализация массива расстояний
-    int distance[SIZE][SIZE];
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            distance[i][j] = -1;
-        }
-    }
-
-    // Начальная вершина
-    distance[startX][startY] = 0;
-    queue[rear][0] = startX;
-    queue[rear][1] = startY;
+    
+    queueX[rear] = start.x;
+    queueY[rear] = start.y;
     rear++;
-
-    // Алгоритм Ли
-    while (front != rear) {
-        int currentX = queue[front][0];
-        int currentY = queue[front][1];
+    
+    while (front < rear) {
+        int x = queueX[front];
+        int y = queueY[front];
         front++;
-
+        
+        if (x == end.x && y == end.y) {
+            return maze[x][y];
+        }
+        
         for (int i = 0; i < 4; i++) {
-            int newX = currentX + dx[i];
-            int newY = currentY + dy[i];
-            if (newX >= 0 && newX < SIZE && newY >= 0 && newY < SIZE && graph[newX][newY] == 1 && distance[newX][newY] == -1) {
-                distance[newX][newY] = distance[currentX][currentY] + 1;
-                queue[rear][0] = newX;
-                queue[rear][1] = newY;
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            
+            if (isValid(maze, visited, nx, ny)) {
+                queueX[rear] = nx;
+                queueY[rear] = ny;
                 rear++;
+                visited[nx][ny] = true;
+                maze[nx][ny] = maze[x][y] + 1;
             }
         }
     }
-
-    // Вывод кратчайшего пути
-    printf("Кратчайший путь от (%d,%d) до (%d,%d) равен %d\n", startX, startY, targetX, targetY, distance[targetX][targetY]);
+    
+    return -1;
 }
 
 int main() {
-    // Инициализация графа случайными значениями
-    int graph[SIZE][SIZE];
-    srand(time(NULL));
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            graph[i][j] = rand() % 2; // заполняем случайными значениями 0 или 1
-        }
+// Пример использования
+    int maze[ROWS][COLS] = {{0, 0, 0, 0},
+                            {1, 1, 0, 1},
+                            {0, 0, 0, 0},
+                            {0, 1, 1, 0}};
+    
+    Point start = {0, 0};
+    Point end = {3, 3};
+    
+    clock_t start_time = clock();
+    
+    int shortestPathLength = leeAlgorithm(maze, start, end);
+    
+    clock_t end_time = clock();
+    
+    double cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+    
+    printf("Shortest path length: %d\n", shortestPathLength);
+    printf("CPU time used: %f seconds\n", cpu_time_used);
+    
+    FILE *file = fopen("files/log.txt", "w");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return 1;
     }
-
-    // Вывод графа на экран
-    printGraph(graph);
-
-    // Поиск кратчайшего пути между двумя вершинами
-    int startX, startY, targetX, targetY;
-    printf("Введите координаты начальной вершины (x y): ");
-    scanf("%d %d", &startX, &startY);
-    printf("Введите координаты конечной вершины (x y): ");
-    scanf("%d %d", &targetX, &targetY);
-    leeAlgorithm(graph, startX, startY, targetX, targetY);
-
-    return EXIT_SUCCESS;
+    
+    fprintf(file, "Shortest path length: %d\n", shortestPathLength);
+    fprintf(file, "CPU time used: %f seconds\n", cpu_time_used);
+    
+    fclose(file);
+    
+    return 0;
 }
